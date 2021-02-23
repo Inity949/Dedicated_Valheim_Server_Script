@@ -237,9 +237,15 @@ sleep 1
     read -p "Enter Password to Enter your Valheim Server: " password
         [[ ${#password} -ge 5 && "$password" == *[[:lower:]]* && "$password" == *[[:upper:]]* && "$password" =~ ^[[:alnum:]]+$ ]] && break
     tput setaf 2; echo "Password not accepted - Too Short, Special Characters" ; tput setaf 9; 
-    tput setaf 2; echo "I swear to LOKI, you better NOT use Special Characters" ; tput setaf 9; 
+    tput setaf 2; echo "I swear to LOKI, you better NOT use Special Characters" ; tput setaf 9;
+    echo ""
+    clear
+    echo ""
 done
+# Server port
 echo ""
+echo "Do you want to change the port used by the server ?"
+read -p "Enter the port used by the Valheim Server (default=2456): " -i 2456 -e port
 clear
 echo "Here is the information you entered"
 echo "This information is only saved in the valheim_server.sh file"
@@ -248,6 +254,7 @@ tput setaf 2; echo "nonroot steam password:  $userpassword " ; tput setaf 9;
 tput setaf 2; echo "Public Server Name:      $displayname " ; tput setaf 9;
 tput setaf 2; echo "Local World Name:        $worldname " ; tput setaf 9;
 tput setaf 2; echo "Valheim Server Password: $password " ; tput setaf 9;
+tput setaf 2; echo "Valheim Server Port: $port " ; tput setaf 9;
 tput setaf 2; echo "---------------------------------------" ; tput setaf 9;
 echo ""
 sleep 5
@@ -299,7 +306,7 @@ export LD_LIBRARY_PATH=./linux64:$LD_LIBRARY_PATH
 export SteamAppId=892970
 # Tip: Make a local copy of this script to avoid it being overwritten by steam.
 # NOTE: You need to make sure the ports 2456-2458 is being forwarded to your server through your local router & firewall.
-./valheim_server.x86_64 -name $displayname -port 2456 -nographics -batchmode -world $worldname -password $password
+./valheim_server.x86_64 -name $displayname -port $port -nographics -batchmode -world $worldname -password $password
 export LD_LIBRARY_PATH=$templdpath
 EOF
 tput setaf 2; echo "Done" ; tput setaf 9;
@@ -396,7 +403,7 @@ function valheim_update_check() {
 #default install dir
 valheiminstall=/home/steam/valheimserver/
 #make temp directory for this Loki file dump
-vaheiminstall_temp=/tmp/lokidump
+vaheiminstall_temp=/tmp/lokidump/
 loki_started=true
 
 dltmpdir=vaheiminstall_temp
@@ -405,7 +412,7 @@ dltmpdir=vaheiminstall_temp
     logfile="$(mktemp)"
     echo "Update and Check Valheim Server"
     steamcmd +login anonymous +force_install_dir $valheiminstall_temp +app_update 896660 -validate +quit
-    rsync -a --itemize-changes --delete --exclude server_exit.drp --exclude steamapps $valheiminstall_temp $valheiminstall | tee "$logfile"
+    rsync -a --chown=steam:steam--itemize-changes --delete --exclude server_exit.drp --exclude steamapps --exclude start_valheim.sh $valheiminstall_temp $valheiminstall | tee "$logfile"
     grep '^[*>]' "$logfile" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo "Valheim Server was updated - restarting"
@@ -529,7 +536,7 @@ function check_apply_server_updates() {
     #Thanks to @lloesche for the throught process and function
     valheiminstall=/home/steam/valheimserver/
     #make temp directory for this Loki file dump
-    vaheiminstall_temp=/tmp/lokidump
+    vaheiminstall_temp=/tmp/lokidump/
     loki_started=true
 
     dltmpdir=vaheiminstall_temp
@@ -538,7 +545,7 @@ function check_apply_server_updates() {
     logfile="$(mktemp)"
     echo "Update and Check Valheim Server"
     steamcmd +login anonymous +force_install_dir $valheiminstall_temp +app_update 896660 -validate +quit
-    rsync -a --itemize-changes --delete --exclude server_exit.drp --exclude steamapps $valheiminstall_temp $valheiminstall | tee "$logfile"
+    rsync -a --chown=steam:steam --itemize-changes --delete --exclude server_exit.drp --exclude steamapps --exclude start_valheim.sh $valheiminstall_temp $valheiminstall | tee "$logfile"
     grep '^[*>]' "$logfile" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo "Valheim Server was updated - restarting"
@@ -749,7 +756,7 @@ $(ColorOrange '-----------Valheim Server Commands---------')
 $(ColorOrange '-')$(ColorGreen ' 5)') Server Admin Tools 
 $(ColorOrange '-')$(ColorGreen ' 6)') Tech Support Tools
 $(ColorOrange '-')$(ColorGreen ' 7)') Install Valheim Server
-$(ColorGreen ' 0)') Exit
+$(ColorOrange '-')$(ColorGreen ' 0)') Exit
 $(ColorOrange '-------------------------------------------')
 $(ColorBlue 'Choose an option:') "
         read a
